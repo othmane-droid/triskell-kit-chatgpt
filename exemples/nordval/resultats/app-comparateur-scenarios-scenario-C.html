@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comparateur de scénarios · Nordval Énergie (client fictif)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#fff;color:#1f2937;line-height:1.4}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 24px}
+h1{font-size:1.5rem;margin:0 0 4px}.sub{color:#6b7280;margin:0 0 16px}
+.card{border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;background:#fff}
+.settings{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;align-items:end;margin-bottom:16px}
+.settings label{display:block;font-weight:600;margin-bottom:6px}.settings input[type=range]{width:100%}
+button{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:1rem;cursor:pointer}button:hover{background:#1d4ed8}
+.main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);gap:16px;align-items:start}
+table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{padding:6px 8px;border-bottom:1px solid #f0f1f3;text-align:left}th{color:#6b7280;font-weight:600;font-size:.8rem}
+td.n{text-align:right;white-space:nowrap}th.n{text-align:right}td.c{text-align:center}
+.tag{padding:1px 8px;border-radius:999px;font-size:.78rem}.Élevé{background:#fee2e2;color:#b91c1c}.Moyen{background:#fef3c7;color:#92400e}.Faible{background:#dcfce7;color:#166534}
+.cols{display:grid;gap:12px;margin-bottom:12px}
+.col h2{font-size:1.05rem;margin:0 0 8px}.kpi{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f3f4f6}.kpi b{font-variant-numeric:tabular-nums}
+.alert{margin-top:6px;padding:8px 10px;border-radius:8px;font-size:.9rem}.bad{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}.ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.bars{display:grid;gap:8px}.bg{font-weight:600;font-size:.9rem;margin-top:6px}.row{display:grid;grid-template-columns:120px 1fr 70px;gap:8px;align-items:center;font-size:.85rem}
+.track{position:relative;height:18px;background:#f3f4f6;border-radius:4px;overflow:visible}.fill{height:100%;border-radius:4px}.limit{position:absolute;top:-3px;bottom:-3px;width:2px;background:#111827}
+.syn{margin-top:12px;font-size:1.05rem;font-weight:600;background:#eff6ff;border-color:#bfdbfe}
+footer{margin-top:16px;color:#9ca3af;font-size:.8rem;text-align:center}
+@media(max-width:900px){.main,.settings{grid-template-columns:1fr}.row{grid-template-columns:90px 1fr 60px}}
+</style></head><body><div class="wrap">
+<h1>Comparateur de scénarios · Nordval Énergie (client fictif)</h1>
+<p class="sub">Comparez les scénarios de feuille de route et voyez en direct l'effet de chaque décision.</p>
+<div class="settings card">
+<div><label for="env">Enveloppe budgétaire : <span id="envV"></span> k€</label><input type="range" id="env" min="500" max="1500" step="10" value="1000"></div>
+<div><label for="cap">Capacité : <span id="capV"></span> j-h</label><input type="range" id="cap" min="1000" max="3000" step="10" value="2000"></div>
+<button id="reset" type="button">Réinitialiser</button></div>
+<div class="main">
+<div class="card"><table id="tbl"><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div>
+<div><div class="cols" id="cols"></div><div class="card"><div id="chart" class="bars"></div></div><div class="card syn" id="syn"></div></div>
+</div>
+<footer>Client et chiffres fictifs</footer></div>
+<script>
+const PROJETS=[["Refonte ERP finance",420,900,8,"Élevé"],["Tableau de bord budgétaire",60,120,7,"Faible"],["Migration cloud",310,640,6,"Moyen"],["Portail fournisseurs",180,380,6,"Moyen"],["Maintenance prédictive",260,520,9,"Élevé"],["Cybersécurité industrielle",220,430,9,"Moyen"],["Application terrain",140,310,7,"Faible"],["Données des compteurs",190,400,8,"Moyen"],["Formation des chefs de projet",45,90,5,"Faible"],["Archivage documentaire",70,150,3,"Faible"]];
+const SCENARIOS=[{id:"A",nom:"Sécuriser",depart:[2,3,6,8,9,10],couleur:"#2563eb"},{id:"B",nom:"Accélérer",depart:[1,2,5,6,7],couleur:"#f59e0b"},{id:"C",nom:"Scénario C",depart:[],couleur:"#10b981"}];
+const sel={};const $=id=>document.getElementById(id);const fmt=n=>n.toLocaleString("fr-FR");
+function init(){SCENARIOS.forEach(s=>sel[s.id]=new Set(s.depart));$("env").value=1000;$("cap").value=2000;
+$("thead").innerHTML="<th>Projet</th><th class='n'>k€</th><th class='n'>j-h</th><th class='n'>Val.</th><th>Risque</th>"+SCENARIOS.map(s=>`<th class='c'>${s.id}</th>`).join("");
+$("tbody").innerHTML=PROJETS.map((p,i)=>`<tr><td>${i+1}. ${p[0]}</td><td class='n'>${p[1]}</td><td class='n'>${fmt(p[2])}</td><td class='n'>${p[3]}</td><td><span class='tag ${p[4]}'>${p[4]}</span></td>`+SCENARIOS.map(s=>`<td class='c'><input type='checkbox' data-s='${s.id}' data-p='${i+1}' aria-label='Scénario ${s.id} : ${p[0]}' ${sel[s.id].has(i+1)?"checked":""}></td>`).join("")+"</tr>").join("");
+$("cols").style.gridTemplateColumns=`repeat(${SCENARIOS.length},minmax(0,1fr))`;render();}
+function calc(s){let b=0,c=0,v=0,r=0;sel[s.id].forEach(n=>{const p=PROJETS[n-1];b+=p[1];c+=p[2];v+=p[3];if(p[4]==="Élevé")r++});return{b,c,v,r,vp:b?v/(b/100):0}}
+function render(){const E=+$("env").value,C=+$("cap").value;$("envV").textContent=fmt(E);$("capV").textContent=fmt(C);
+const R=SCENARIOS.map(s=>({s,m:calc(s)}));
+$("cols").innerHTML=R.map(({s,m})=>{const a=[];if(m.b>E)a.push(`Dépasse l'enveloppe de ${fmt(m.b-E)} k€`);if(m.c>C)a.push(`Dépasse la capacité de ${fmt(m.c-C)} j-h`);
+return `<div class='card col' data-col='${s.id}'><h2>Scénario ${s.id} « ${s.nom} »</h2><div class='kpi'><span>Budget total</span><b data-k='b'>${fmt(m.b)} k€</b></div><div class='kpi'><span>Charge totale</span><b data-k='c'>${fmt(m.c)} j-h</b></div><div class='kpi'><span>Valeur totale</span><b data-k='v'>${m.v}</b></div><div class='kpi'><span>Risques élevés</span><b data-k='r'>${m.r}</b></div><div class='kpi'><span>Valeur par 100 k€</span><b data-k='vp'>${m.vp.toLocaleString("fr-FR",{maximumFractionDigits:1})}</b></div>`+
+(a.length?a.map(t=>`<div class='alert bad' data-alert='${t.includes("enveloppe")?"budget":"capacite"}'>⚠ ${t}</div>`).join(""):`<div class='alert ok' data-alert='ok'>✓ Respecte l'enveloppe et la capacité</div>`)+"</div>"}).join("");
+const bar=(lbl,val,lim,col,u)=>{const pct=lim?val/lim*100:0,w=Math.min(pct,100)*0.8;return `<div class='row'><span>${lbl}</span><div class='track'><div class='fill' style='width:${w}%;background:${pct>100?"#dc2626":col}'></div><div class='limit' style='left:80%'></div></div><b>${Math.round(pct)} %</b></div>`};
+$("chart").innerHTML="<div class='bg'>Budget rapporté à l'enveloppe (trait noir = limite)</div>"+R.map(({s,m})=>bar("Scénario "+s.id,m.b,E,s.couleur)).join("")+"<div class='bg'>Charge rapportée à la capacité (trait noir = limite)</div>"+R.map(({s,m})=>bar("Scénario "+s.id,m.c,C,s.couleur)).join("");
+const a=R[0].m,b=R[1].m,ok=m=>m.b<=E&&m.c<=C;const iss=(n,m)=>{const t=[];if(m.b>E)t.push(`dépasse le budget de ${fmt(m.b-E)} k€`);if(m.c>C)t.push(`dépasse la capacité de ${fmt(m.c-C)} j-h`);return t.join(" et ")};
+let t=ok(a)?"A respecte les limites.":`A ${iss("A",a)}.`;const d=b.v-a.v;
+let g=d>0?`B apporte ${d} point${d>1?"s":""} de valeur de plus`:d<0?`B apporte ${-d} point${-d>1?"s":""} de valeur de moins`:"B apporte la même valeur";
+t+=" "+g+(ok(b)?(d>0?", et respecte les limites.":", et respecte les limites."):`, mais ${iss("B",b)}.`);$("syn").textContent=t;}
+document.addEventListener("change",e=>{const x=e.target;if(x.dataset.s){const set=sel[x.dataset.s],n=+x.dataset.p;x.checked?set.add(n):set.delete(n);render()}});
+$("env").addEventListener("input",render);$("cap").addEventListener("input",render);$("reset").addEventListener("click",init);init();
+</script></body></html>
